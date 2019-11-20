@@ -70,7 +70,9 @@ class ParallelProcess implements Runnable
      */
     public function seekOutput()
     {
-        $this->process->getOutput();
+        try {
+            $this->process->getOutput();
+        } catch (\Throwable $ex) {} // There's one particular exception that can occur her,e related to the symfony process trying to invoke a callback function that was made null. I believe this happens in a rare race condition where the SIGCHILD call is fired while getOutput() is being run. getOutput() then runs twice with slightly desynchronized state, causing the exception.
     }
 
     public function getOutput()
