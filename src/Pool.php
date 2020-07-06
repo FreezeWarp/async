@@ -176,40 +176,40 @@ class Pool implements ArrayAccess
 
         unset($this->queue[$process->getId()]);
 
-        $this->inProgress[$process->getPid()] = $process;
+        $this->inProgress[$process->getId()] = $process;
     }
 
     public function markAsFinished(Runnable $process)
     {
-        unset($this->inProgress[$process->getPid()]);
+        unset($this->inProgress[$process->getId()]);
 
         $this->notify();
 
         $this->results[] = $process->triggerSuccess();
 
-        $this->finished[$process->getPid()] = $process;
+        $this->finished[$process->getId()] = $process;
     }
 
     public function markAsTimedOut(Runnable $process)
     {
-        unset($this->inProgress[$process->getPid()]);
+        unset($this->inProgress[$process->getId()]);
 
         $this->notify();
 
         $process->triggerTimeout();
 
-        $this->timeouts[$process->getPid()] = $process;
+        $this->timeouts[$process->getId()] = $process;
     }
 
     public function markAsFailed(Runnable $process)
     {
-        unset($this->inProgress[$process->getPid()]);
+        unset($this->inProgress[$process->getId()]);
 
         $this->notify();
 
         $process->triggerError();
 
-        $this->failed[$process->getPid()] = $process;
+        $this->failed[$process->getId()] = $process;
     }
 
     public function offsetExists($offset)
@@ -291,19 +291,17 @@ class Pool implements ArrayAccess
                     break;
                 }
 
-                $process = $this->inProgress[$pid] ?? null;
+                foreach ($this->inProgress AS $inProgress) {
+                    if ($inProgress->getPid() === $pid) {
+                        if ($status['status'] === 0) {
+                            $this->markAsFinished($inProgress);
+                            continue;
+                        }
 
-                if (! $process) {
-                    continue;
+                        //echo "\nPCNTL Failed Signal: " . var_export($status) . "\n";
+                        $this->markAsFailed($inProgress);
+                    }
                 }
-
-                if ($status['status'] === 0) {
-                    $this->markAsFinished($process);
-
-                    continue;
-                }
-
-                $this->markAsFailed($process);
             }
         });
     }
