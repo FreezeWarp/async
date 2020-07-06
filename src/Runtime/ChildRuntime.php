@@ -4,8 +4,8 @@ use Spatie\Async\Runtime\ParentRuntime;
 
 try {
     $autoloader = $argv[1] ?? null;
-    $serializedClosure = $argv[2] ?? null;
-    $outputLength = $argv[3] ? intval($argv[3]) : (1024 * 10);
+    $serializedClosureFile = $argv[2] ?? null;
+    $outputLength = $argv[3] ? intval($argv[3]) : -1;
 
     if (! $autoloader) {
         throw new InvalidArgumentException('No autoloader provided in child process.');
@@ -27,7 +27,7 @@ try {
 
     $serializedOutput = base64_encode(serialize($output));
 
-    if (strlen($serializedOutput) > $outputLength) {
+    if ($outputLength >= 0 && strlen($serializedOutput) > $outputLength) {
         throw \Spatie\Async\Output\ParallelError::outputTooLarge($outputLength);
     }
 
