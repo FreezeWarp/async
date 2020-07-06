@@ -36,6 +36,7 @@ class ParallelProcess implements Runnable
         $this->startTime = microtime(true);
 
         $this->process->start();
+        //echo "\nCommand: " . $this->process->getCommandLine() . "\n";
 
         $this->pid = $this->process->getPid();
 
@@ -95,6 +96,10 @@ class ParallelProcess implements Runnable
         if (! $this->errorOutput) {
             $processOutput = $this->process->getErrorOutput();
 
+            //echo "Deserialized Error: ";
+            //echo base64_decode($processOutput);
+            //echo "\n";
+
             $this->errorOutput = @unserialize(base64_decode($processOutput));
 
             if (! $this->errorOutput) {
@@ -129,12 +134,8 @@ class ParallelProcess implements Runnable
     {
         $exception = $this->getErrorOutput();
 
-        if ($exception instanceof SerializableException) {
-            $exception = $exception->asThrowable();
-        }
-
         if (! $exception instanceof Throwable) {
-            $exception = ParallelError::fromException($exception);
+            $exception = ParallelError::fromException((string) $exception);
         }
 
         return $exception;
