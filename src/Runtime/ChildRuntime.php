@@ -3,6 +3,10 @@
 use Spatie\Async\Runtime\ParentRuntime;
 
 try {
+    ob_start(function() {
+        return "";
+    });
+
     $autoloader = $argv[1] ?? null;
     $serializedClosureFile = $argv[2] ?? null;
     $outputLength = $argv[3] ? intval($argv[3]) : -1;
@@ -41,6 +45,8 @@ try {
     if ($outputLength >= 0 && strlen($serializedOutput) > $outputLength) {
         throw \Spatie\Async\Output\ParallelError::outputTooLarge($outputLength);
     }
+
+    ob_end_clean();
 
     fwrite(STDOUT, $serializedOutput);
 
