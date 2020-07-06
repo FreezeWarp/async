@@ -15,8 +15,19 @@ try {
         throw new InvalidArgumentException("Could not find autoloader in child process: {$autoloader}");
     }
 
-    if (! $serializedClosure) {
-        throw new InvalidArgumentException('No valid closure was passed to the child process.');
+    if (!$serializedClosureFile) {
+        throw new \InvalidArgumentException("No file was passed to load the closure from.");
+    }
+    if (!file_exists($serializedClosureFile)) {
+        throw new \InvalidArgumentException("The serialized closure does not exist.");
+    }
+
+    $serializedClosure = file_get_contents($serializedClosureFile);
+    if (!unlink($serializedClosureFile)) {
+        throw new \RuntimeException("Unable to delete the serialized closure file.");
+    }
+    if (!$serializedClosure) {
+        throw new InvalidArgumentException("The serialized closure file contents were empty or could not be read.");
     }
 
     require_once $autoloader;
@@ -35,11 +46,9 @@ try {
 
     exit(0);
 } catch (Throwable $exception) {
-    require_once __DIR__.'/../Output/SerializableException.php';
+    ob_end_clean();
 
-    $output = new \Spatie\Async\Output\SerializableException($exception);
-
-    fwrite(STDERR, base64_encode(serialize($output)));
+    fwrite(STDERR, base64_encode(serialize($exception)));
 
     exit(1);
 }

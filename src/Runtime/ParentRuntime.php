@@ -64,11 +64,15 @@ class ParentRuntime
             return SynchronousProcess::create($task, self::getId());
         }
 
+        $file = tempnam("/tmp", "async"); // create a temporary file with our input
+        chmod($file, 0744); // make sure it can be read by the subprocess
+        file_put_contents($file, self::encodeTask($task)); // write our input to this temporary file
+
         $process = new Process([
             'php',
             self::$childProcessScript,
             self::$autoloader,
-            self::encodeTask($task),
+            $file,
             $outputLength,
         ]);
 
